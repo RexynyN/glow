@@ -1,8 +1,9 @@
 import argparse
+import os 
 
 # sub-command functions
 def foo(args):
-    print(args.x * args.y)
+    print(args)
 
 def bar(args):
     print('((%s))' % args.z)
@@ -12,9 +13,9 @@ parser = argparse.ArgumentParser(description="A multiplatform toolbox for everyt
 subparsers = parser.add_subparsers()
 
 # Create the parser for the "filerename" command
-filerename_parser = subparsers.add_parser('foo')
-filerename_parser.add_argument('-x', type=int, default=1)
-filerename_parser.add_argument('y', type=float)
+filerename_parser = subparsers.add_parser('filerename')
+filerename_parser.add_argument('dir', type=str, default=os.getcwd())
+# filerename_parser.add_argument('y', type=float)
 filerename_parser.set_defaults(func=foo)
 
 # create the parser for the "bar" command
@@ -24,4 +25,4 @@ parser_bar.set_defaults(func=bar)
 
 # parse the args and call whatever function was selected
 args = parser.parse_args()
-# args.func(args)
+args.func(args)
