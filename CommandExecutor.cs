@@ -1,13 +1,17 @@
 using System.Diagnostics;
+using System.IO;
 
 namespace Glow {
     static class CommandExecutor
     {
         public static void Command(){
-             Process p = new Process{
+
+
+
+            Process p = new Process{
                 StartInfo =
                  {
-                     FileName = "node",                        
+                     FileName = "git",                        
                      WorkingDirectory = @"C:\",
                      Arguments = "--version"
                  }
