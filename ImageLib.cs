@@ -18,10 +18,10 @@ namespace Glow
             return Convert.ToBase64String(imageArray);
         }
 
-        public void ConvertDataUrl(string dataurl)
-        {
-            var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(dataurl)));
-            image.Save();
-        }
+        //public void ConvertDataUrl(string dataurl)
+        //{
+        //    var image = Image.FromStream(new MemoryStream(Convert.FromBase64String(dataurl)));
+        //    image.Save();
+        //}
     }
 }

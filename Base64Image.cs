@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using SixLabors.ImageSharp;
+using Seggs;
 
 namespace Glow
 {
@@ -14,6 +16,11 @@ namespace Glow
         {
             ContentType = contentType;
             FileContents = fileContents;
+        }
+
+        public Base64Image(string dataUri)
+        {
+
         }
 
         public static Base64Image Parse(string base64Content)
@@ -35,8 +42,9 @@ namespace Glow
 
         public void ToImageFile(string path)
         {
-
-        }
+            byte[] data = Convert.FromBase64String(base64String);
+            using var image = Image.Load(data);
+        }   
 
         public string ToDataUrl()
         {

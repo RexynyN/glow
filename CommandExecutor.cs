@@ -18,6 +18,7 @@ namespace Glow {
             };
 
             p.Start();
+            p.WaitForExit();
         }
     }
 }
