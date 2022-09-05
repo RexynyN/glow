@@ -1,30 +1,25 @@
 ﻿using Glow.Commands;
-using SixLabors.ImageSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using System.Xml.Linq;
 
 namespace Glow
 {
     class Primes
     {
-        private PrimesOptions Args;
+        private PrimesOptions args;
 
         public Primes(PrimesOptions args)
         {
-            Args = args;
+            this.args = args;
         }
 
-
-        public int  PrimeFactory()
+        public void PrimeFactory()
         {
             int number = 3;
-            List<int> primes = new List<int>(Args.Threshold);
+            List<int> primes = new List<int>(args.Threshold) { 2 };
             int i = 1;
-            bool guard = false;
-            while (i < Args.Threshold)
+            bool guard;
+            while (i < args.Threshold)
             {
                 guard = true;
                 double root = Math.Sqrt(number);
@@ -46,13 +41,23 @@ namespace Glow
                     i += 1;
                 }
                 number++;
-
             }
 
-            foreach (var prime in primes)
-                Console.Write(prime + " ");
-
-            return 0;
+            if (args.Json)
+            {
+                var json = JsonSerializer.Serialize(primes);
+                File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "primes.json"), json);
+            }
+            else if (args.Txt)
+            {
+                string output = string.Join(" ", primes.ToArray());
+                File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "primes.txt"), output);
+            }
+            else
+            {
+                foreach (var prime in primes)
+                    Console.Write(prime + " ");
+            }
         }
     }
 }
