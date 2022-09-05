@@ -43,6 +43,10 @@ namespace Glow
                 number++;
             }
 
+        }
+
+        private void CreateFile (List<int> primes)
+        {
             if (args.Json)
             {
                 var json = JsonSerializer.Serialize(primes);
@@ -58,6 +62,6 @@ namespace Glow
                 foreach (var prime in primes)
                     Console.Write(prime + " ");
             }
-        }
+        }    
     }
 }

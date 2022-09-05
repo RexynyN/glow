@@ -27,7 +27,6 @@ namespace Glow
 
             p.Start();
             p.WaitForExit();
-            Console.WriteLine(p.ExitCode);
             return p.ExitCode;
         }
 
