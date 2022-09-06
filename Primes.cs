@@ -45,7 +45,7 @@ namespace Glow
 
         }
 
-        private void CreateFile (List<int> primes)
+        private void CreateFile(List<int> primes)
         {
             if (args.Json)
             {

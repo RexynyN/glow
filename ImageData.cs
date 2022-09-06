@@ -1,6 +1,8 @@
 using Glow.Commands;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Glow
 {
@@ -27,12 +29,13 @@ namespace Glow
         public void ConvertImages()
         {
             if (!args.Dir)
+                return;
                             
         }
 
         private void CreateFile(List<string> values)
         {
-            var json = JsonSerializer.Serialize(primes);
+            var json = JsonSerializer.Serialize(values);
             File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "primes.json"), json);
         } 
 

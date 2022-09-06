@@ -4,7 +4,7 @@ using CommandLine;
 namespace Glow.Commands
 {
     [Verb("imagedata", HelpText = "Transform images into base 64 data uris and vice-versa.")]
-    class VideoCompressOptions
+    class ImageDataOptions
     {
         [Value(0, Required = true, Default=".", HelpText = "Location of the file/directory.")]
         public string Location { get; set; }
