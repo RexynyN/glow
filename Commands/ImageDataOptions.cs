@@ -7,7 +7,7 @@ namespace Glow.Commands
     class ImageDataOptions
     {
         [Value(0, Required = true, Default=".", HelpText = "Location of the file/directory.")]
-        public string Location { get; set; }
+        public string ?Location { get; set; }
 
         [Option('d', "dir", Default = false, HelpText = "Signifies that the location is a directory of images.")]
         public bool Dir { get; set; }

@@ -42,9 +42,8 @@ namespace Glow
                 }
                 number++;
             }
-
         }
-
+        
         private void CreateFile(List<int> primes)
         {
             if (args.Json)

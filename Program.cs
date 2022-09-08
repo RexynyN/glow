@@ -14,7 +14,7 @@ public class Program
     {
         Parser.Default.ParseArguments<PrimesOptions, VideoCompressOptions, SyncOptions>(args)
           .WithParsed<PrimesOptions>(opts => new Primes(opts).PrimeFactory())
-          .WithParsed<SyncOptions>(opts => new Sync(opts).GitAddCommand())
+          .WithParsed<SyncOptions>(opts => new Sync(opts).Start())
           .WithParsed<VideoCompressOptions>(opts => new VideoCompress(opts).CompressVideo())
           .WithNotParsed(errs => HandleParseError(errs));
 

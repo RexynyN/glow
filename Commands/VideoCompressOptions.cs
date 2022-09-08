@@ -7,6 +7,6 @@ namespace Glow.Commands
     class VideoCompressOptions
     {
         [Value(0, Required = false, Default=".", HelpText = "The number of primes to return.")]
-        public string Dir { get; set; }
+        public string ?Dir { get; set; }
     }
 }

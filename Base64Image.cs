@@ -19,7 +19,7 @@ namespace Glow
 
         public Base64Image(string dataUri)
         {
-
+            
         }
 
         public static Base64Image Parse(string base64Content)

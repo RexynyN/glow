@@ -7,9 +7,9 @@ namespace Glow.Commands
     class SyncOptions
     {
         [Value(0, Required = true, HelpText = "Sync up, sync down, register.")]
-        public string Action { get; set; }
+        public string ?Action { get; set; }
 
         [Option('p', "path", Default = ".", HelpText = "Set the output to a .txt file.", SetName = "register")]
-        public string Path { get; set; }
+        public string ?Path { get; set; }
     }
 }
