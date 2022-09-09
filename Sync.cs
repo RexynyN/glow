@@ -3,8 +3,16 @@ using System.Diagnostics;
 using System.IO;
 
 
+
+
 namespace Glow
 {
+    class CommandOutput{
+        public int ExitCode { get; set; }
+        public string Output { get; set; }
+        public string Errors { get; set; }
+    }
+
     class Sync
     {
         private SyncOptions args;
@@ -45,31 +53,48 @@ namespace Glow
 
         public void SyncDown()
         {
-            foreach (string dir in GetLocalDirs())
+            foreach (string dir in GetLocalRepos())
             {
                 Console.WriteLine($"Syncing down '{dir}'");
-                GitPullCommand(dir);
+                SendCommand(dir, "git", "pull");
             }
 
             Console.WriteLine("All synced down.");
         }
 
-
-
-        private IEnumerable<string> GetLocalDirs()
-        {
-            return File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sync.txt"));
-        }
-
         private void SyncUp()
         {
-            foreach (string dir in GetLocalDirs())
+            foreach (string dir in GetLocalRepos())
             {
                 Console.WriteLine($"Syncing down '{dir}'");
-                GitPullCommand(dir);
+                SendCommand(dir, "git", "add .");
+                CommandOutput response =  SendCommand(dir, "git", $"commit -m '{CommitMessage()}'");
+
+                // This is the standard message when there`s no chances to commit
+                // Change if there's any change to it.
+                if (response.Output.Contains("nothing to commit, working tree clean")){
+                    Console.WriteLine($"'{dir}' have nothing to commit, skipping...");
+                    continue;
+                }
+
+                response = SendCommand(dir, "git", "push");
+                if(response.ExitCode == 0)
+                    Console.WriteLine($"'{dir}' have been synced up.");
+                else
+                    Console.WriteLine($"'{dir}' had an error in syncing up: " + response.Output);
             }
 
             Console.WriteLine("All synced up.");
+        }
+
+        private object CommitMessage()
+        {
+            return "Commit - " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+        }
+
+        private IEnumerable<string> GetLocalRepos()
+        {
+            return File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sync.txt"));
         }
 
         public void RegisterRepo()
@@ -82,7 +107,7 @@ namespace Glow
 
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sync.txt");
             if (!File.Exists(filePath))
-                File.Create(filePath);
+                File.Create(filePath).Close();
 
             string list = "";
             try
@@ -101,61 +126,19 @@ namespace Glow
             list += args.Path + "\n";
 
             File.WriteAllText(filePath, list);
+
             Console.WriteLine($"'{args.Path}' registered successfully");
         }
 
-        public void GitAddCommand()
-        {
-            Process p = new Process
-            {
-                StartInfo =
-                {
-                    WorkingDirectory = @"C:\Users\017585631\Desktop\codes\Desafios",
-                    FileName = "git",
-                    Arguments = $"add .",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-
-            p.Start();
-            p.WaitForExit();
-        }
-
-        public void GitCommitCommand()
+        private CommandOutput SendCommand(string dir, string command, string arguments)
         {
             Process p = new Process
             {
                 StartInfo =
                 {
                     WorkingDirectory = args.Path,
-                    FileName = "git",
-                    Arguments = $"commit -m 'Clock'",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-
-            p.Start();
-
-            string output = p.StandardOutput.ReadToEnd();
-            // This is the standard message when there`s no chances to commit
-            // Change if there's any change to it.
-            if (output.Contains("nothing to commit, working tree clean"))
-                System.Console.WriteLine("Seggs");
-
-            p.WaitForExit();
-        }
-
-        private void GitPullCommand(string path)
-        {
-            Process p = new Process
-            {
-                StartInfo =
-                {
-                    WorkingDirectory = path,
-                    FileName = "git",
-                    Arguments = $"pull",
+                    FileName = command,
+                    Arguments = arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 }
@@ -163,11 +146,8 @@ namespace Glow
 
             p.Start();
             p.WaitForExit();
-        }
 
-        public void OrchestrateCommand()
-        {
-            return;
+            return new CommandOutput { ExitCode = p.ExitCode,  Output = p.StandardOutput.ReadToEnd(), Errors = p.StandardError.ReadToEnd()};
         }
     }
 }
