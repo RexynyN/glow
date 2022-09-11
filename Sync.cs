@@ -66,9 +66,9 @@ namespace Glow
         {
             foreach (string dir in GetLocalRepos())
             {
-                Console.WriteLine($"Syncing down '{dir}'");
+                Console.WriteLine($"Syncing up '{dir}'");
                 SendCommand(dir, "git", "add .");
-                CommandOutput response =  SendCommand(dir, "git", $"commit -m '{CommitMessage()}'");
+                CommandOutput response =  SendCommand(dir, "git", $"commit -m \"{CommitMessage()}\"");
 
                 // This is the standard message when there`s no chances to commit
                 // Change if there's any change to it.
@@ -76,8 +76,15 @@ namespace Glow
                     Console.WriteLine($"'{dir}' have nothing to commit, skipping...");
                     continue;
                 }
+                Console.WriteLine(response.Output);
+                Console.WriteLine(response.Errors);
+
+
 
                 response = SendCommand(dir, "git", "push");
+                Console.WriteLine(response.Output);
+                Console.WriteLine(response.Errors);
+
                 if(response.ExitCode == 0)
                     Console.WriteLine($"'{dir}' have been synced up.");
                 else
