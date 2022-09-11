@@ -7,7 +7,8 @@ using System.IO;
 
 namespace Glow
 {
-    class CommandOutput{
+    class CommandOutput
+    {
         public int ExitCode { get; set; }
         public string Output { get; set; }
         public string Errors { get; set; }
@@ -31,6 +32,12 @@ namespace Glow
         public void Start()
         {
             CheckArgs();
+            
+            if(args.List)
+            {
+                ListLocalDirs();
+                return;
+            }
 
             switch (args.Action)
             {
@@ -51,6 +58,12 @@ namespace Glow
             }
         }
 
+        private void ListLocalDirs()
+        {
+            foreach(string dir in GetLocalRepos())
+                Console.WriteLine(dir);
+        }
+
         public void SyncDown()
         {
             foreach (string dir in GetLocalRepos())
@@ -67,28 +80,40 @@ namespace Glow
             foreach (string dir in GetLocalRepos())
             {
                 Console.WriteLine($"Syncing up '{dir}'");
-                SendCommand(dir, "git", "add .");
-                CommandOutput response =  SendCommand(dir, "git", $"commit -m \"{CommitMessage()}\"");
+                CommandOutput response = SendCommand(dir, "git", "add .");
+                if(args.Verbose)
+                {
+                    Console.WriteLine(response.Output);
+                    Console.WriteLine(response.Errors);
+                }
+
+                response = SendCommand(dir, "git", $"commit -m \"{CommitMessage()}\"");
 
                 // This is the standard message when there`s no chances to commit
                 // Change if there's any change to it.
-                if (response.Output.Contains("nothing to commit, working tree clean")){
+                if (response.Output.Contains("nothing to commit, working tree clean"))
+                {
                     Console.WriteLine($"'{dir}' have nothing to commit, skipping...");
                     continue;
                 }
-                Console.WriteLine(response.Output);
-                Console.WriteLine(response.Errors);
 
-
+                if(args.Verbose)
+                {
+                    Console.WriteLine(response.Output);
+                    Console.WriteLine(response.Errors);
+                }
 
                 response = SendCommand(dir, "git", "push");
-                Console.WriteLine(response.Output);
-                Console.WriteLine(response.Errors);
+                if (args.Verbose)
+                {
+                    Console.WriteLine(response.Output);
+                    Console.WriteLine(response.Errors);
+                }
 
-                if(response.ExitCode == 0)
-                    Console.WriteLine($"'{dir}' have been synced up.");
+                if (response.ExitCode == 0)
+                    Console.WriteLine($"'{dir}' have been synced up.\n");
                 else
-                    Console.WriteLine($"'{dir}' had an error in syncing up: " + response.Output);
+                    Console.WriteLine($"'{dir}' had an error in syncing up: " + response.Output + "\n");
             }
 
             Console.WriteLine("All synced up.");
@@ -125,7 +150,7 @@ namespace Glow
             {
             }
 
-            if(list.Contains(args.Path))
+            if (list.Contains(args.Path))
             {
                 System.Console.WriteLine("Repository already registered, skipping...");
                 return;
@@ -154,7 +179,7 @@ namespace Glow
             p.Start();
             p.WaitForExit();
 
-            return new CommandOutput { ExitCode = p.ExitCode,  Output = p.StandardOutput.ReadToEnd(), Errors = p.StandardError.ReadToEnd()};
+            return new CommandOutput { ExitCode = p.ExitCode, Output = p.StandardOutput.ReadToEnd(), Errors = p.StandardError.ReadToEnd() };
         }
     }
 }

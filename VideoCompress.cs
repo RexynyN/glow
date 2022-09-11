@@ -32,6 +32,7 @@ namespace Glow
 
         public void CompressVideo()
         {
+            
             string cwd; 
             if(args.Dir.Trim() == ".")
                 cwd = Directory.GetCurrentDirectory();
