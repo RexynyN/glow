@@ -110,10 +110,11 @@ namespace Glow
                     Console.WriteLine(response.Errors);
                 }
 
-                if (response.ExitCode == 0)
-                    Console.WriteLine($"'{dir}' have been synced up.\n");
-                else
+                if (response.ExitCode != 0)
                     Console.WriteLine($"'{dir}' had an error in syncing up: " + response.Output + "\n");
+                else
+                    Console.WriteLine($"'{dir}' have been synced up.\n");
+
             }
 
             Console.WriteLine("All synced up.");

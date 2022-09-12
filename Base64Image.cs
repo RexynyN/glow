@@ -1,6 +1,6 @@
-﻿using System;
-using System.Linq;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+
 
 namespace Glow
 {
@@ -8,42 +8,66 @@ namespace Glow
     // Thread: https://stackoverflow.com/questions/21325661/convert-an-image-selected-by-path-to-base64-string
     public class Base64Image
     {
+        public string Filename { get; set; }
         public string ContentType { get; set; }
         public byte[] FileContents { get; set; }
+        public string DataUri { get; set; }
 
-        public Base64Image(string contentType, byte[] fileContents)
+        public Base64Image(string filename, string contentType, byte[] fileContents, string dataUri)
         {
+            Filename = filename;
             ContentType = contentType;
             FileContents = fileContents;
+            DataUri = dataUri;
         }
 
-        public Base64Image(string dataUri)
+        public static Base64Image Parse(string dataUri, string filename)
         {
-            
-        }
+            if (string.IsNullOrEmpty(dataUri))
+                throw new ArgumentNullException(nameof(dataUri));
 
-        public static Base64Image Parse(string base64Content)
-        {
-            if (string.IsNullOrEmpty(base64Content))
-            {
-                throw new ArgumentNullException(nameof(base64Content));
-            }
-
-            int indexOfSemiColon = base64Content.IndexOf(";", StringComparison.OrdinalIgnoreCase);
-            string dataLabel = base64Content.Substring(0, indexOfSemiColon);
+            int indexOfSemiColon = dataUri.IndexOf(";", StringComparison.OrdinalIgnoreCase);
+            string dataLabel = dataUri.Substring(0, indexOfSemiColon);
             string contentType = dataLabel.Split(':').Last();
-            var startIndex = base64Content.IndexOf("base64,", StringComparison.OrdinalIgnoreCase) + 7;
-            var fileContents = base64Content.Substring(startIndex);
+            var startIndex = dataUri.IndexOf("base64,", StringComparison.OrdinalIgnoreCase) + 7;
+            var fileContents = dataUri.Substring(startIndex);
             var bytes = Convert.FromBase64String(fileContents);
 
-            return new Base64Image(contentType, bytes);
+            return new Base64Image(filename, contentType, bytes, dataUri);
         }
 
-        public void ToImageFile(string content)
+        public static Base64Image Parse(string filename, byte[] fileContent)
         {
-            byte[] data = Convert.FromBase64String(content);
-            using var image = Image.Load(data);
-        }   
+            if (fileContent == null)
+                throw new ArgumentNullException(nameof(fileContent));
+
+            string dataUri = Convert.ToBase64String(fileContent);
+            string contentType = "image/" + filename.Split(".")[1];
+            
+            return new Base64Image(filename, contentType, fileContent, dataUri);
+        }
+
+        public static Base64Image Parse(string filename, Image image)
+        {
+            if (image == null)
+                throw new ArgumentNullException(nameof(image));
+
+            string dataUri = image.ToBase64String(Image.DetectFormat(filename));
+            byte[] fileContent = Convert.FromBase64String(dataUri);
+            string contentType = "image/" + filename.Split(".")[1];
+            
+            return new Base64Image(filename, contentType, fileContent, dataUri);
+        }
+
+        public void ToImageFile()
+        {
+            using var image = Image.Load(FileContents);
+
+            if(!Filename.EndsWith(ContentType.Split("/")[1]))
+                Filename = Filename.Split(".")[0] + ContentType.Split("/")[1];
+
+            image.Save(Filename);
+        }  
 
         public string ToDataUrl()
         {
