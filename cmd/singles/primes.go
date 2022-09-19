@@ -3,8 +3,10 @@ package singles
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"math"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -26,8 +28,22 @@ var PrimesCmd = &cobra.Command{
 			return
 		}
 
-		for _, prime := range gimmePrimes(threshold) {
-			fmt.Println(prime)
+		primes := gimmePrimes(threshold)
+
+		json, _ := cmd.Flags().GetBool("json")
+		txt, _ := cmd.Flags().GetBool("txt")
+		if json {
+			saveToJson(primes)
+		}
+
+		if txt {
+			saveToTxt(primes)
+		}
+
+		if !json && !txt {
+			for _, prime := range primes {
+				fmt.Println(prime)
+			}
 		}
 	},
 }
@@ -35,20 +51,6 @@ var PrimesCmd = &cobra.Command{
 func init() {
 	PrimesCmd.Flags().BoolP("json", "j", false, "Sets the output of primes to a json file")
 	PrimesCmd.Flags().BoolP("txt", "t", false, "Sets the output of primes to a txt file")
-
-	// VideoCmd.Flags().StringVarP(&urlPath, "url", "u", "", "The url to ping")
-	// if err := VideoCmd.MarkFlagRequired("url"); err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pingCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func gimmePrimes(threshold int) []int {
@@ -79,17 +81,43 @@ func gimmePrimes(threshold int) []int {
 }
 
 func saveToJson(primes []int) {
-	videoBytes, err := json.Marshal(primes)
+	primeBytes, err := json.Marshal(primes)
 	if err != nil {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile("./videos-updated.json", videoBytes, 0644)
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile(filepath.Join(cwd, "primes.json"), primeBytes, 0644)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func saveToTxt() {
+func saveToTxt(primes []int) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
+	f, err := os.Create(filepath.Join(cwd, "primes.txt"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	val := ""
+	for _, prime := range primes {
+		val += fmt.Sprint(prime) + "\n"
+	}
+	data := []byte(val)
+
+	_, err2 := f.Write(data)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
 }

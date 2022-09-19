@@ -1,4 +1,4 @@
-module main
+module glow
 
 go 1.19
 

@@ -9,7 +9,7 @@ import (
 // pingCmd represents the ping command
 var WhoamiCmd = &cobra.Command{
 	Use:   "whoami",
-	Short: "Tells you who am I.",
+	Short: "Tells you who I am.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(iAmHim())
@@ -17,19 +17,6 @@ var WhoamiCmd = &cobra.Command{
 }
 
 func init() {
-	// VideoCmd.Flags().StringVarP(&urlPath, "url", "u", "", "The url to ping")
-	// if err := VideoCmd.MarkFlagRequired("url"); err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pingCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func iAmHim() string {
@@ -57,7 +44,7 @@ func iAmHim() string {
 	Twitter: @breno_nogs
 	Instagram: @breno.nogs
 	GitHub: RexynyN
-	Discord: RexynyN#
+	Discord: RexynyN#7795
 	
 	He really appreciate anyone who enjoys his quirky words that does stuff on the computer, 
 	so throw a thank you text at him, it would make his day! 

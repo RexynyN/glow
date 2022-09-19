@@ -61,6 +61,10 @@ func randomName() string {
 	return string(name)
 }
 
+func replaceName(filename string, expression string, replacer string) string {
+	return strings.ReplaceAll(filename, expression, replacer)
+}
+
 func renameFiles(path string, callback func() string) {
 	for _, file := range readFiles(path) {
 		if file.IsDir() {

@@ -6,9 +6,9 @@ package cmd
 import (
 	"os"
 
-	"main/cmd/file"
-	"main/cmd/singles"
-	"main/cmd/videoeditor"
+	"glow/cmd/file"
+	"glow/cmd/singles"
+	"glow/cmd/videoeditor"
 
 	"github.com/spf13/cobra"
 )
