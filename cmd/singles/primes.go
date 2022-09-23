@@ -21,7 +21,6 @@ var PrimesCmd = &cobra.Command{
 	Short:      "Shows you a lot of prime numbers, as much as you need.",
 	Long:       ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("cmd.Args: %v\n", cmd.Args)
 		threshold, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Println("The threshold of primes is in the incorrect format, use an integer number.")

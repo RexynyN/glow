@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
+Copyright © 2022 Breno Nogueira breno.s.nogueira@hotmail.com
 */
 package file
 
@@ -15,8 +15,7 @@ import (
 )
 
 var (
-	urlPath string
-	dir     bool
+	toName string
 )
 
 var renameCmd = &cobra.Command{
@@ -24,37 +23,48 @@ var renameCmd = &cobra.Command{
 	Short: "Rename a file or a directory of files using various utilities.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Print: " + strings.Join(args, " "))
-		con, _ := cmd.Flags().GetString("url")
-		fmt.Print(con)
+		if random, _ := cmd.Flags().GetBool("random"); random {
+			cwd, _ := os.Getwd()
+			renameFiles(cwd, randomName)
+			return
+		}
+
 	},
 }
 
 func init() {
 	FileCmd.AddCommand(renameCmd)
 
-	renameCmd.Flags().StringVarP(&urlPath, "url", "u", ".", "The url to ping")
-	renameCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Selectors
+	renameCmd.Flags().String("contains", "", "Selects all files which contains the given literal.")
+	renameCmd.Flags().String("startsWith", "", "Selects all files which starts with the given literal.")
+	renameCmd.Flags().String("endsWith", "", "Selects all files which ends with the given literal.")
+	renameCmd.Flags().String("extensions", "", "Selects files by the given pool of file extensions. (separated by comma)")
 
-	// if err := VideoCmd.MarkFlagRequired("url"); err != nil {
-	// 	fmt.Println(err)
-	// }
+	// Operations
+	renameCmd.Flags().String("iterate", "", "Type of value to append to '--to' flag (number, letter, mixed), '--to' must have {} to be replaced by the value.")
+	renameCmd.Flags().BoolP("random", "r", false, "Renames all selected files to a random string of characters and numbers.")
+	renameCmd.Flags().String("replace", "", "Replace all instances of the given expression, if found. (--to flag is required)")
+	renameCmd.Flags().String("replaceOnce", "", "Replace first instance of the given expression, if found. (--to flag is required)")
+	renameCmd.Flags().String("to", "", "The value to replace, or the name to be set.")
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pingCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// String Cases
+	renameCmd.Flags().Bool("toUpper", false, "Flips all selected files to Upper Case (after all replace and rename operations)")
+	renameCmd.Flags().Bool("toLower", false, "Flips all selected files to Lower Case (after all replace and rename operations)")
+	renameCmd.Flags().Bool("toTitle", false, "Flips all selected files to Title Case (after all replace and rename operations)")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Tools
+	renameCmd.Flags().Bool("revert", false, "Revert the last rename operation in the current folder, if any.")
 }
+
+// glow file rename --extensions "mp4,png" --startsWith "abc" --endsWith "123" --replace "0a--" --to ""
+// glow file rename --iterate number --to "Bogus Volume {}"
 
 func randomName() string {
 	strong := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	alfabet := []rune(strong)
-	name := make([]rune, 25)
-	for i := 0; i < 25; i++ {
+	name := make([]rune, 35)
+	for i := 0; i < 35; i++ {
 		name[i] = alfabet[rand.Intn(len(strong))]
 	}
 
@@ -65,18 +75,18 @@ func replaceName(filename string, expression string, replacer string) string {
 	return strings.ReplaceAll(filename, expression, replacer)
 }
 
-func renameFiles(path string, callback func() string) {
+func renameFiles(path string, nameGetter func() string) {
 	for _, file := range readFiles(path) {
 		if file.IsDir() {
 			continue
 		}
-		newName := callback()
+		newName := nameGetter()
 		splot := strings.Split(file.Name(), ".")
 		fmt.Println(file.Name() + " -> " + newName)
 
 		err := os.Rename(path+"\\"+file.Name(), path+"\\"+newName+"."+splot[1])
 		if err != nil {
-			fmt.Println(err)
+			panic(err)
 		}
 	}
 }
