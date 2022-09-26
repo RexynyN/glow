@@ -38,10 +38,14 @@ func Execute() {
 }
 
 func init() {
+	// Finished Commands
 	rootCmd.AddCommand(singles.WhoamiCmd)
 	rootCmd.AddCommand(singles.PrimesCmd)
 	rootCmd.AddCommand(file.FileCmd)
+
+	// Unfinished/Not Started Commands
 	rootCmd.AddCommand(videoeditor.VideoCmd)
+	rootCmd.AddCommand(singles.ImageUriCmd)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

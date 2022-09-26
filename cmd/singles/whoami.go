@@ -23,7 +23,7 @@ func iAmHim() string {
 	return `
 	I am the Glow CLI tool, made for everything you need (and everything you don't need too!) 
 
-	I was created by the beautiful (and single) Breno Nogueira, a brazilian student who 
+	I was created by the handsome (and single) Breno Nogueira, a brazilian student who 
 	should really focus in one programming language and finish his projects.
 
 	If you really use this tool in your day-to-day work, I was programmed to thank you, as my 

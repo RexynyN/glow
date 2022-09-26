@@ -5,21 +5,31 @@ Copyright © 2022 Breno Nogueira breno.s.nogueira@hotmail.com
 package file
 
 import (
+	"encoding/json"
 	"fmt"
 	"glow/common"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
+type operationValues struct {
+	OriginalName string `json:"originalName"`
+	ChangedName  string `json:"changedName"`
+}
+type renameOperation struct {
+	Path       string            `json:"path"`
+	Operations []operationValues `json:"values"`
+}
+
 var (
-	toName      string
 	iterateEnum []string = []string{"number", "letter", "mixed"}
+	blacklist   []rune   = []rune{'/', '\\', ':', '?', '*', '<', '>', '|', '"'}
 )
 
 var renameCmd = &cobra.Command{
@@ -32,25 +42,29 @@ var renameCmd = &cobra.Command{
 
 func run(cmd *cobra.Command, args []string) {
 	// Tools
-	cwd, _ := os.Getwd()
+	cwd := common.GetCwd()
 	if revert, _ := cmd.Flags().GetBool("revert"); revert {
-		revertLastChanges(cwd)
+		revertLastChanges()
+		return
 	}
 
-	files := readFiles(cwd)
+	files := common.ReadFiles(cwd)
 	// Selectors
 	if contains, _ := cmd.Flags().GetString("contains"); contains != "" {
-		files = filterFiles(files, func(name string) bool { return strings.Contains(name, contains) })
+		files = filterFiles(files, func(name string) bool {
+			return strings.Contains(common.GetPureFilename(name), contains)
+		})
 	}
 
 	if startsWith, _ := cmd.Flags().GetString("startsWith"); startsWith != "" {
-		files = filterFiles(files, func(name string) bool { return strings.HasPrefix(name, startsWith) })
+		files = filterFiles(files, func(name string) bool {
+			return strings.HasPrefix(common.GetPureFilename(name), startsWith)
+		})
 	}
 
 	if endsWith, _ := cmd.Flags().GetString("endsWith"); endsWith != "" {
 		files = filterFiles(files, func(name string) bool {
-			name = strings.Split(name, ".")[0]
-			return strings.HasSuffix(name, endsWith)
+			return strings.HasSuffix(common.GetPureFilename(name), endsWith)
 		})
 	}
 
@@ -71,10 +85,20 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// Operations
-	changedFiles := make([]string, len(files))
+	changedFiles := getFileNames(files)
+	common.NaturalSort(changedFiles)
+	originalFiles := make([]string, len(changedFiles))
+	copy(originalFiles, changedFiles)
+
 	toValue, _ := cmd.Flags().GetString("to")
+	if !checkForbiddenRunes(toValue) {
+		fmt.Println("New file name cannot contain the following characters: / \\ : ? * < > | \"")
+		return
+	}
+
+	replace, _ := cmd.Flags().GetString("replace")
 	if random, _ := cmd.Flags().GetBool("random"); random {
-		changedFiles = randomizeFiles(len(files))
+		changedFiles = randomizeFiles(changedFiles)
 	} else if iterate, _ := cmd.Flags().GetString("iterate"); iterate != "" && toValue != "" {
 		if !checkEnum(iterate, iterateEnum) {
 			fmt.Println("'--iterate' flag does not contain a valid option.")
@@ -86,15 +110,13 @@ func run(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		// TODO: Parei aqui!
-		changedFiles = getFileNames(files)
-		common.NaturalSort(changedFiles)
-
-		originalFiles := make([]string, len(changedFiles))
-		copy(originalFiles, changedFiles)
-
-		iterateFiles(changedFiles, toValue, iterate)
-
+		changedFiles = iterateFiles(changedFiles, toValue, iterate)
+	} else if replaceOnce, _ := cmd.Flags().GetString("replaceOnce"); replaceOnce != "" || replace != "" {
+		if replaceOnce != "" {
+			changedFiles = replaceFiles(changedFiles, replaceOnce, 1, toValue)
+		} else {
+			changedFiles = replaceFiles(changedFiles, replace, -1, toValue)
+		}
 	}
 
 	// String Cases
@@ -106,57 +128,15 @@ func run(cmd *cobra.Command, args []string) {
 		changedFiles = filesToCase(changedFiles, strings.ToTitle)
 	}
 
-	// renameFiles(files, cwd, changedFiles)
-}
-
-func iterateFiles(changedFiles []string, toValue string, iterate string) []string {
-	for index := range changedFiles {
-		changedFiles[index] = strings.ReplaceAll(toValue, "{}", fmt.Sprint(index+1))
+	if changesWereMade(originalFiles, changedFiles) {
+		makeRecord(originalFiles, cwd, changedFiles)
+		renameFiles(originalFiles, cwd, changedFiles)
+	} else {
+		fmt.Println("No changes were made. If that's not intentional, check your filters and try again.")
 	}
-
-	return changedFiles
-}
-
-func getFileNames(files []fs.FileInfo) (filenames []string) {
-	for _, file := range files {
-		filenames = append(filenames, file.Name())
-	}
-	return
-}
-
-func checkEnum(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func revertLastChanges(cwd string) {
-	panic("unimplemented")
-}
-
-func filesToCase(files []string, toCase func(string) string) (filenames []string) {
-	for _, file := range files {
-		filenames = append(filenames, toCase(file))
-	}
-	return
-}
-
-func filterFiles(files []fs.FileInfo, filter func(string) bool) (filtered []fs.FileInfo) {
-	for _, file := range files {
-		if filter(file.Name()) {
-			filtered = append(filtered, file)
-		}
-	}
-
-	return filtered
 }
 
 func init() {
-	FileCmd.AddCommand(renameCmd)
-
 	// Selectors
 	renameCmd.Flags().String("contains", "", "Selects all files which contains the given literal.")
 	renameCmd.Flags().String("startsWith", "", "Selects all files which starts with the given literal.")
@@ -179,9 +159,118 @@ func init() {
 	renameCmd.Flags().Bool("revert", false, "Revert the last rename operation in the current folder, if any.")
 }
 
-func randomizeFiles(size int) (changedFiles []string) {
-	for i := 0; i < size; i++ {
-		changedFiles = append(changedFiles, randomName())
+func changesWereMade(originalFiles []string, changedFiles []string) (sentinel bool) {
+	sentinel = false
+	for index := range originalFiles {
+		if originalFiles[index] != changedFiles[index] {
+			sentinel = true
+			break
+		}
+	}
+
+	return sentinel
+}
+
+func saveRecords(records renameOperation) {
+	recordsBytes, err := json.Marshal(records)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile(filepath.Join(common.GetExePath(), "rename_operations.json"), recordsBytes, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func makeRecord(originalFiles []string, cwd string, changedFiles []string) {
+	records := make([]operationValues, len(originalFiles))
+
+	for index := range records {
+		records[index] = operationValues{OriginalName: originalFiles[index], ChangedName: changedFiles[index]}
+	}
+
+	saveRecords(renameOperation{
+		Path:       cwd,
+		Operations: records,
+	})
+}
+
+func replaceFiles(files []string, literal string, numChanges int, replace string) []string {
+	for index := range files {
+		files[index] = strings.Trim(strings.Replace(common.GetPureFilename(files[index]), literal, replace, numChanges)+common.GetFileExtension(files[index]), " ")
+	}
+
+	return files
+}
+
+func iterateFiles(files []string, toValue string, iterate string) []string {
+	for index := range files {
+		files[index] = strings.Trim(strings.ReplaceAll(toValue, "{}", fmt.Sprint(index+1))+common.GetFileExtension(files[index]), " ")
+	}
+
+	return files
+}
+
+func getFileNames(files []fs.FileInfo) (filenames []string) {
+	for _, file := range files {
+		filenames = append(filenames, file.Name())
+	}
+	return
+}
+
+func checkEnum(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func revertLastChanges() {
+	reverter := renameOperation{}
+
+	filebytes, err := os.ReadFile(filepath.Join(common.GetExePath(), "rename_operations.json"))
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(filebytes, &reverter)
+	if err != nil {
+		fmt.Println("An error occured while reading the renaming operations history.")
+	}
+
+	source := make([]string, len(reverter.Operations))
+	modified := make([]string, len(reverter.Operations))
+	for index, value := range reverter.Operations {
+		modified[index] = value.OriginalName
+		source[index] = value.ChangedName
+	}
+
+	renameFiles(source, reverter.Path, modified)
+}
+
+func filesToCase(files []string, toCase func(string) string) (filenames []string) {
+	for _, file := range files {
+		filenames = append(filenames, toCase(file))
+	}
+	return
+}
+
+func filterFiles(files []fs.FileInfo, filter func(string) bool) (filtered []fs.FileInfo) {
+	for _, file := range files {
+		if filter(file.Name()) {
+			filtered = append(filtered, file)
+		}
+	}
+
+	return filtered
+}
+
+func randomizeFiles(files []string) (changedFiles []string) {
+	for i := 0; i < len(files); i++ {
+		changedFiles = append(changedFiles, randomName()+common.GetFileExtension(files[i]))
 	}
 
 	return
@@ -198,35 +287,26 @@ func randomName() string {
 	return string(name)
 }
 
-func replaceName(filename string, expression string, replacer string) string {
-	return strings.ReplaceAll(filename, expression, replacer)
-}
+func renameFiles(files []string, path string, newFiles []string) {
+	if len(files) != len(newFiles) {
+		log.Fatal("The number of files in the list are not equal, cannot map old filenames to new filenames")
+	}
 
-func renameFiles(files []string, path string, nameGetter func() string) {
-	for _, file := range files {
-
-		newName := nameGetter()
-		splot := strings.Split(file, ".")
-		fmt.Println(file + " -> " + newName)
-
-		err := os.Rename(path+"\\"+file, path+"\\"+newName+"."+splot[1])
+	for index, file := range files {
+		err := os.Rename(filepath.Join(path, file), filepath.Join(path, newFiles[index]))
 		if err != nil {
-			panic(err)
+			fmt.Println("An error occured while trying to rename the files: ", err)
 		}
 	}
 }
 
-func readFiles(path string) (files []os.FileInfo) {
-	dirFiles, err := ioutil.ReadDir(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range dirFiles {
-		if !file.IsDir() {
-			files = append(files, file)
+func checkForbiddenRunes(name string) (sentinel bool) {
+	sentinel = true
+	for _, runer := range blacklist {
+		if strings.ContainsRune(name, runer) {
+			sentinel = false
+			break
 		}
 	}
-
-	return files
+	return sentinel
 }

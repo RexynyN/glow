@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 )
 
 func blop() {
@@ -16,6 +17,30 @@ func blop() {
 	fmt.Println(videos)
 
 	saveVideos(videos)
+}
+
+func notAMoronWayToDoIt() {
+	coronaVirusJSON := `{
+        "name" : "covid-11",
+        "country" : "China",
+        "city" : "Wuhan",
+        "reason" : "Non vedge Food"
+    }`
+
+	// Declared an empty map interface
+	var result map[string]interface{}
+
+	// Unmarshal or Decode the JSON to the interface.
+	json.Unmarshal([]byte(coronaVirusJSON), &result)
+
+	// Print the data type of result variable
+	fmt.Println(reflect.TypeOf(result))
+
+	// Reading each value by its key
+	fmt.Println("Name :", result["name"],
+		"\nCountry :", result["country"],
+		"\nCity :", result["city"],
+		"\nReason :", result["reason"])
 }
 
 type video struct {

@@ -4,8 +4,6 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package file
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -14,11 +12,13 @@ var FileCmd = &cobra.Command{
 	Short: "Utility commands to work with files.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Breno")
+		return
 	},
 }
 
 func init() {
+	FileCmd.AddCommand(renameCmd)
+
 	// VideoCmd.Flags().StringVarP(&urlPath, "url", "u", "", "The url to ping")
 	// if err := VideoCmd.MarkFlagRequired("url"); err != nil {
 	// 	fmt.Println(err)
