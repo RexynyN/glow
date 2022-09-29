@@ -23,7 +23,9 @@ func notAMoronWayToDoIt() {
 	coronaVirusJSON := `{
         "name" : "covid-11",
         "country" : "China",
-        "city" : "Wuhan",
+        "city" : [
+			""
+		],
         "reason" : "Non vedge Food"
     }`
 
