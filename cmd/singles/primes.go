@@ -20,31 +20,33 @@ var PrimesCmd = &cobra.Command{
 	ArgAliases: []string{"threshold"},
 	Short:      "Shows you a lot of prime numbers, as much as you need.",
 	Long:       ``,
-	Run: func(cmd *cobra.Command, args []string) {
-		threshold, err := strconv.Atoi(args[0])
-		if err != nil {
-			fmt.Println("The threshold of primes is in the incorrect format, use an integer number.")
-			return
-		}
+	Run:        primes,
+}
 
-		primes := gimmePrimes(threshold)
+func primes(cmd *cobra.Command, args []string) {
+	threshold, err := strconv.Atoi(args[0])
+	if err != nil {
+		fmt.Println("The threshold of primes is in the incorrect format, use an integer number.")
+		return
+	}
 
-		json, _ := cmd.Flags().GetBool("json")
-		txt, _ := cmd.Flags().GetBool("txt")
-		if json {
-			saveToJson(primes)
-		}
+	primes := gimmePrimes(threshold)
 
-		if txt {
-			saveToTxt(primes)
-		}
+	json, _ := cmd.Flags().GetBool("json")
+	txt, _ := cmd.Flags().GetBool("txt")
+	if json {
+		saveToJson(primes)
+	}
 
-		if !json && !txt {
-			for _, prime := range primes {
-				fmt.Println(prime)
-			}
+	if txt {
+		saveToTxt(primes)
+	}
+
+	if !json && !txt {
+		for _, prime := range primes {
+			fmt.Println(prime)
 		}
-	},
+	}
 }
 
 func init() {

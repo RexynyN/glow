@@ -17,18 +17,10 @@ var ImageUriCmd = &cobra.Command{
 	Use:   "imageuri",
 	Short: "Makes operations with images and datauris, for transforming images in text.",
 	Long:  ``,
-	Run:   run,
+	Run:   imageUri,
 }
 
-func init() {
-	ImageUriCmd.Flags().BoolP("convert", "c", false, "Convert images to a data uri file (.txt or .json).")
-	ImageUriCmd.Flags().BoolP("revert", "r", false, "Revert data uri files to images.")
-
-}
-
-// glow imageuri convert
-
-func run(cmd *cobra.Command, args []string) {
+func imageUri(cmd *cobra.Command, args []string) {
 	cwd := common.GetCwd()
 	files := common.ReadFilesByExtension(common.GetCwd(), []string{"jpg", "jpeg", "jfif", "png", "webp"})
 
@@ -36,6 +28,11 @@ func run(cmd *cobra.Command, args []string) {
 		datauri := bogusBinted(filepath.Join(cwd, file.Name()))
 		fmt.Println(datauri)
 	}
+}
+
+func init() {
+	ImageUriCmd.Flags().BoolP("convert", "c", false, "Convert images to a data uri file (.txt or .json).")
+	ImageUriCmd.Flags().BoolP("revert", "r", false, "Revert data uri files to images.")
 }
 
 func bogusBinted(filepath string) string {
